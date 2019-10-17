@@ -14,20 +14,11 @@ To run the script the following environment variables are required:
  * DB_HOST: database host
  * DB_NAME: database
  * GGP_PASS: symmetric password to encrypt backups
- * GCS_BUCKET: 'uniqkey-mysql-backups'
- * GCS_SA: '/gcp-credential/sa-key.json'
+ * GCS_BUCKET: the bucket to upload into
+ * GCS_SA: the location of the service account token e.g. '/gcp-credential/sa-key.json'
 
-The aws cli for S3 uploads also needs a `~/.aws/credentials` which can be created using `aws configure`. You then simply run: 
 
-```sh
-s3mysqlbackup.sh
-```
-
-This tools is availabe on hub.docker.com at simonmassey/gcp-mysql-backup
-
-## Setting up on OpenShift Kubernetes
-
-The `openshift.yaml` sets the job to run daily at 2:30am. You need to run `aws configure` and save the generated `$HOME/.aws/*` into the root of this repo. (Ours our hidden by `git secret` so if you know the secret just `git secret reveal`.) You also need a `.env` file with the environment variabiles listed above. Then simply: 
+## Setting up on Kubernetes
 
 ```sh
 oc login ...
@@ -39,14 +30,12 @@ oc project xyz
 
 If you need to restore the files you first need to decrypt them with something like: 
 
-```
+```sh
 gpg --batch --no-tty --yes --decrypt --passphrase $secret_key "$tmpfile"
 ```
 
 Then load them with something like: 
 
-```
+```sh
 find . -name '*.sql' | awk '{ print "source",$0 }' | mysql -u root -p$mysqlpass -h you.host.com -P 3306 --batch
 ```
-
-
