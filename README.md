@@ -7,6 +7,8 @@ This backup script container is on hub.docker.com at simonmassey/gcpmysqlbackup
 
 ## Setting up on Kubernetes
 
+Install the sa credential, the connection details, and the cronjob with: 
+
 ```sh
 oc login ...
 oc project xyz
@@ -15,8 +17,12 @@ kubectl create secret generic gcp-credential --from-file=sa-key.json
 # install database secrets. see example below
 kubectl apply -f db-secret.yaml 
 # install the job 
-kubectl apply -f openshift.yaml
+kubectl apply -f crontab.yaml
 ```
+
+See examples below for the secret. 
+
+# How it works
 
 The `Dockerfile` creates an image with the GCP tools and `gcpmysqlbackup.sh`
 
@@ -30,7 +36,7 @@ To run the backup script the following environment variables are required:
  * GCS_BUCKET: the bucket to upload into
  * GCS_SA: the location of the service account token e.g. '/gcp-credential/sa-key.json'
 
-This can be done with a secret: 
+This can be done with a secret such as the following `db-secret.yaml`: 
 
 ```yaml
 apiVersion: v1
@@ -43,7 +49,7 @@ stringData:
   DB_PASS: 'yyyy'
   DB_HOST: 'zzz.cluster-ro-blah.eu-west-1.rds.amazonaws.com'
   DB_NAME: 'ddddd'
-  GCS_PASS: 'ggggg'
+  GGP_PASS: 'ggggg'
   GCS_BUCKET: 'your-mysql-backups'
   GCS_SA: '/gcp-credential/sa-key.json'
 ```
@@ -53,7 +59,7 @@ stringData:
 If you need to restore the files you first need to decrypt them with something like: 
 
 ```sh
-gpg --batch --no-tty --yes --decrypt --passphrase $secret_key "$tmpfile"
+gpg --batch --no-tty --yes --decrypt --passphrase $GGP_PASS "$tmpfile"
 ```
 
 Then load them with something like: 
