@@ -5,9 +5,22 @@ Backup a mysql database server to Google Cloud Storate. This code is inspired by
 
 This backup script container is on hub.docker.com at simonmassey/gcpmysqlbackup
 
-## Usage
+## Setting up on Kubernetes
 
-To run the script the following environment variables are required: 
+```sh
+oc login ...
+oc project xyz
+# save the service account credential as sa-key.json then install it as secret gcp-crential
+kubectl create secret generic gcp-credential --from-file=sa-key.json
+# install database secrets. see example below
+kubectl apply -f db-secret.yaml 
+# install the job 
+kubectl apply -f openshift.yaml
+```
+
+The `Dockerfile` creates an image with the GCP tools and `gcpmysqlbackup.sh`
+
+To run the backup script the following environment variables are required: 
 
  * DB_USER: database user
  * DB_PASS: database password
@@ -17,13 +30,22 @@ To run the script the following environment variables are required:
  * GCS_BUCKET: the bucket to upload into
  * GCS_SA: the location of the service account token e.g. '/gcp-credential/sa-key.json'
 
+This can be done with a secret: 
 
-## Setting up on Kubernetes
-
-```sh
-oc login ...
-oc project xyz
-./create-openshift.sh
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: gcp-mysql-backup
+type: Opaque
+stringData:
+  DB_USER: 'xxx'
+  DB_PASS: 'yyyy'
+  DB_HOST: 'zzz.cluster-ro-blah.eu-west-1.rds.amazonaws.com'
+  DB_NAME: 'ddddd'
+  GCS_PASS: 'ggggg'
+  GCS_BUCKET: 'your-mysql-backups'
+  GCS_SA: '/gcp-credential/sa-key.json'
 ```
 
 ## Restoring the database
