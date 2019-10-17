@@ -1,0 +1,27 @@
+# run the backup ever day at 2:30 am
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: gcp-mysql-backup
+spec:
+  schedule: "30 2 * * *"  
+  jobTemplate:             
+    spec:
+      template:
+        spec:
+          containers:
+          - name: gcp-mysql-backup
+            image: simonmassey/gcpmysqlbackup:0.2.0
+            command: ["/usr/local/bin/gcpmysqlbackup.sh"]
+            envFrom:
+            - secretRef:
+                name: gcp-mysql-backup
+            volumeMounts:
+              - name: gcp-credential
+                mountPath: /gcp-credential
+                readOnly: true
+          volumes:
+            - name: gcp-credential
+              secret:
+                secretName: gcp-credential
+          restartPolicy: OnFailure

@@ -1,0 +1,49 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: gcp-mysql-backup
+spec:
+  schedule: "0 1 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: gcp-mysql-backup
+            image: docker.io/simonmassey/gcpmysqlbackup
+            env:
+              - name: DB_NAME
+                valueFrom:
+                  configMapKeyRef:
+                    name: gcp-mysql-backup
+                    key: db
+              - name: GCS_BUCKET
+                valueFrom:
+                  configMapKeyRef:
+                    name: gcp-mysql-backup
+                    key: gcs-bucket
+              - name: DB_HOST
+                valueFrom:
+                  secretKeyRef:
+                    name: gcp-mysql-backup
+                    key: db_host
+              - name: DB_USER
+                valueFrom:
+                  secretKeyRef:
+                    name: gcp-mysql-backup
+                    key: username
+              - name: DB_PASS
+                valueFrom:
+                  secretKeyRef:
+                    name: gcp-mysql-backup
+                    key: password
+              - name: GCS_SA
+                valueFrom:
+                  secretKeyRef:
+                    name: "gcp-mysql-backup"
+                    key: sa-key.json
+            args:
+            - /bin/bash
+            - -c
+            - "/usr/local/bin/gcpmysqlbackup.sh"
+          restartPolicy: OnFailure

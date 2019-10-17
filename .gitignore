@@ -1,0 +1,5 @@
+.env
+credentials
+.gitsecret/keys/random_seed
+sa-key.json
+db-secret.yaml
